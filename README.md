@@ -27,32 +27,69 @@
 - **신문**: 조선일보, 동아일보, 중앙일보, 한겨레, 경향신문
 - **방송**: SBS, MBC, KBS
 
-## 🚀 설치 및 실행
+## 🚀 Streamlit Cloud 배포
+
+### 1. 리포지토리 준비
+```bash
+git clone <this-repository>
+cd test_v01
+```
+
+### 2. Streamlit Cloud에서 배포
+1. **https://share.streamlit.io** 접속
+2. **New app** 클릭
+3. **GitHub 리포지토리 연결**
+4. **Main file path**: `streamlit_app.py`
+5. **Deploy!** 클릭
+
+### 3. API 키 설정 (중요!)
+배포 후 Streamlit Cloud 대시보드에서:
+
+1. **앱 선택 → Settings → Secrets**
+2. **다음 내용 입력:**
+```toml
+NAVER_CLIENT_ID = "your_naver_client_id"
+NAVER_CLIENT_SECRET = "your_naver_client_secret"
+OPENAI_API_KEY = "your_openai_api_key"
+```
+3. **Save** → 앱 자동 재시작
+
+## 🛠️ 로컬 개발 설정
 
 ### 1. 패키지 설치
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Streamlit Secrets 설정
+### 2. 로컬 Secrets 설정
 프로젝트 루트에 `.streamlit` 폴더를 생성하고 `secrets.toml` 파일을 만드세요:
 
 ```toml
-# .streamlit/secrets.toml
+# .streamlit/secrets.toml (로컬 개발용)
 [default]
 NAVER_CLIENT_ID = "your_naver_client_id"
 NAVER_CLIENT_SECRET = "your_naver_client_secret"
 OPENAI_API_KEY = "your_openai_api_key"
 ```
 
-**API 키 발급 방법:**
-- **네이버 API**: [네이버 개발자 센터](https://developers.naver.com/apps/#/register)에서 검색 API 신청
-- **OpenAI API**: [OpenAI Platform](https://platform.openai.com/api-keys)에서 API 키 생성
-
-### 3. 애플리케이션 실행
+### 3. 로컬 실행
 ```bash
 streamlit run streamlit_app.py
 ```
+
+## 📚 API 키 발급 방법
+
+### 🔍 네이버 검색 API
+1. [네이버 개발자 센터](https://developers.naver.com/apps/#/register) 접속
+2. **애플리케이션 등록** 클릭
+3. **검색 API** 선택 후 등록
+4. **Client ID**와 **Client Secret** 확인
+
+### 🤖 OpenAI API  
+1. [OpenAI Platform](https://platform.openai.com/api-keys) 접속
+2. **Create new secret key** 클릭
+3. API 키 복사 (다시 볼 수 없으니 안전하게 보관)
+4. 사용량에 따라 요금 부과 (약 $0.002/1K tokens)
 
 ## 📁 프로젝트 구조
 
@@ -120,6 +157,13 @@ test_v01/
 
 ## 🔒 보안 설정
 
-- Streamlit secrets 사용으로 API 키 보안 관리
-- `.streamlit/` 폴더를 `.gitignore`에 추가 권장
-- 운영 환경에서는 환경변수 또는 Streamlit Cloud secrets 사용
+- **Streamlit Cloud**: 웹 인터페이스에서 안전한 secrets 관리
+- **로컬 개발**: `.streamlit/secrets.toml` 사용
+- **Git 보안**: API 키는 절대 리포지토리에 커밋하지 않음
+- **자동 보호**: `.gitignore`로 민감한 파일 자동 제외
+
+## 🌐 라이브 데모
+
+**Streamlit Cloud**: [여기에 배포된 앱 URL 입력]
+
+배포 후 위 링크에서 바로 체험해보세요!

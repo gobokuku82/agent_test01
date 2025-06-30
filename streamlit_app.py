@@ -52,27 +52,42 @@ def main():
     # API 키 확인
     try:
         naver_client_id = st.secrets["NAVER_CLIENT_ID"]
+        naver_client_secret = st.secrets["NAVER_CLIENT_SECRET"]
         openai_api_key = st.secrets["OPENAI_API_KEY"]
         
-        if not naver_client_id or not openai_api_key:
+        if not naver_client_id or not naver_client_secret or not openai_api_key:
             raise KeyError("API 키가 비어있습니다")
             
     except KeyError:
-        st.error("⚠️ API 키가 설정되지 않았습니다. Streamlit secrets를 확인해주세요.")
-        st.code("""
-# .streamlit/secrets.toml 파일 예시
-[default]
-NAVER_CLIENT_ID = "your_naver_client_id"
-NAVER_CLIENT_SECRET = "your_naver_client_secret"
-OPENAI_API_KEY = "your_openai_api_key"
-        """)
-        st.markdown("""
-        **설정 방법:**
-        1. 프로젝트 루트에 `.streamlit` 폴더 생성
-        2. `.streamlit/secrets.toml` 파일 생성
-        3. 위 형식으로 API 키 입력
-        4. 앱 재시작
-        """)
+        st.error("⚠️ API 키가 설정되지 않았습니다.")
+        
+        with st.expander("🔧 Streamlit Cloud에서 Secrets 설정하기", expanded=True):
+            st.markdown("""
+            **Streamlit Cloud에서 API 키 설정 방법:**
+            
+            1. **Streamlit Cloud 앱 관리 페이지로 이동**
+               - https://share.streamlit.io 접속
+               - 본 앱 선택
+            
+            2. **Settings → Secrets 메뉴 클릭**
+            
+            3. **다음 형식으로 secrets 입력:**
+            ```toml
+            NAVER_CLIENT_ID = "your_naver_client_id"
+            NAVER_CLIENT_SECRET = "your_naver_client_secret"  
+            OPENAI_API_KEY = "your_openai_api_key"
+            ```
+            
+            4. **Save 버튼 클릭** 후 앱 자동 재시작
+            
+            ---
+            
+            **📚 API 키 발급 방법:**
+            - **네이버 검색 API**: [developers.naver.com](https://developers.naver.com/apps/#/register)
+            - **OpenAI API**: [platform.openai.com](https://platform.openai.com/api-keys)
+            """)
+        
+        st.info("💡 **로컬 개발시**: 프로젝트 루트에 `.streamlit/secrets.toml` 파일을 생성하여 동일한 형식으로 설정하세요.")
         return
     
     # 분석 실행
