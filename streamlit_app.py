@@ -72,8 +72,19 @@ def main():
         st.markdown("<br>", unsafe_allow_html=True)
         analyze_button = st.button("⚡ 실시간 분석 시작", type="primary", use_container_width=True)
     
-    # API 키 확인
+    # API 키 확인 및 디버깅
     naver_client_id, naver_client_secret, openai_api_key = get_api_keys()
+    
+    # 디버깅 정보 (개발용)
+    with st.expander("🔍 디버깅 정보", expanded=False):
+        st.write("**환경 정보:**")
+        st.write(f"- hasattr(st, 'secrets'): {hasattr(st, 'secrets')}")
+        if hasattr(st, 'secrets'):
+            st.write(f"- len(st.secrets): {len(st.secrets)}")
+            st.write(f"- secrets keys: {list(st.secrets.keys()) if len(st.secrets) > 0 else 'None'}")
+        st.write(f"- NAVER_CLIENT_ID 길이: {len(naver_client_id) if naver_client_id else 0}")
+        st.write(f"- NAVER_CLIENT_SECRET 길이: {len(naver_client_secret) if naver_client_secret else 0}")
+        st.write(f"- OPENAI_API_KEY 길이: {len(openai_api_key) if openai_api_key else 0}")
     
     if not naver_client_id or not naver_client_secret or not openai_api_key:
         st.error("⚠️ API 키가 설정되지 않았습니다.")
@@ -85,21 +96,36 @@ def main():
             # Streamlit Cloud 환경
             with st.expander("🔧 Streamlit Cloud Secrets 설정", expanded=True):
                 st.markdown("""
-                **Streamlit Cloud에서 Secrets 설정 방법:**
+                **⚠️ 중요: Streamlit Cloud에서는 따옴표 없이 입력하세요!**
+                
+                **올바른 설정 방법:**
                 
                 1. **앱 관리 페이지**에서 본 앱 선택
                 2. **⚙️ Settings** 클릭  
                 3. **🔐 Secrets** 탭 선택
-                4. **텍스트박스에 다음 입력:**
+                4. **텍스트박스에 다음과 같이 입력:**
                 
                 ```
-                NAVER_CLIENT_ID = "your_naver_client_id"
-                NAVER_CLIENT_SECRET = "your_naver_client_secret"
-                OPENAI_API_KEY = "your_openai_api_key"
+                NAVER_CLIENT_ID = your_actual_naver_client_id
+                NAVER_CLIENT_SECRET = your_actual_naver_client_secret
+                OPENAI_API_KEY = your_actual_openai_api_key
                 ```
                 
-                5. **💾 Save** 클릭 → 앱 자동 재시작
+                **❌ 잘못된 예시:**
+                ```
+                NAVER_CLIENT_ID = "your_naver_client_id"  # 따옴표 금지!
+                ```
+                
+                **✅ 올바른 예시:**
+                ```
+                NAVER_CLIENT_ID = abc123def456  # 따옴표 없이!
+                ```
+                
+                5. **💾 Save** 클릭 → 앱 자동 재시작 (30초 소요)
                 """)
+                
+                st.warning("🚨 **주의사항**: 실제 API 키 값에는 따옴표를 포함하지 마세요!")
+                
         else:
             # 로컬 환경
             with st.expander("🛠️ 로컬 개발 환경 설정", expanded=True):
