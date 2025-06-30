@@ -2,6 +2,7 @@ import requests
 import feedparser
 from bs4 import BeautifulSoup
 import streamlit as st
+import os
 from typing import List, Dict, Any
 import time
 import re
@@ -9,12 +10,20 @@ from urllib.parse import urljoin, urlparse
 
 class EnhancedNewsAPI:
     def __init__(self):
+        # 안전한 API 키 가져오기
         try:
-            self.naver_client_id = st.secrets["NAVER_CLIENT_ID"]
-            self.naver_client_secret = st.secrets["NAVER_CLIENT_SECRET"]
-        except KeyError:
-            self.naver_client_id = None
-            self.naver_client_secret = None
+            # Streamlit Cloud 환경
+            if hasattr(st, 'secrets') and len(st.secrets) > 0:
+                self.naver_client_id = st.secrets.get("NAVER_CLIENT_ID", "")
+                self.naver_client_secret = st.secrets.get("NAVER_CLIENT_SECRET", "")
+            else:
+                # 로컬 환경 (환경변수)
+                self.naver_client_id = os.getenv("NAVER_CLIENT_ID", "")
+                self.naver_client_secret = os.getenv("NAVER_CLIENT_SECRET", "")
+        except Exception:
+            # 예외 발생시 빈 문자열
+            self.naver_client_id = ""
+            self.naver_client_secret = ""
         
         # 언론사별 RSS 피드와 웹사이트 정보
         self.media_sources = {

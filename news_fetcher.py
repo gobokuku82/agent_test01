@@ -1,16 +1,25 @@
 import requests
 import streamlit as st
+import os
 from typing import List, Dict, Any
 import urllib.parse
 
 class NewsAPI:
     def __init__(self):
+        # 안전한 API 키 가져오기
         try:
-            self.client_id = st.secrets["NAVER_CLIENT_ID"]
-            self.client_secret = st.secrets["NAVER_CLIENT_SECRET"]
-        except KeyError:
-            self.client_id = None
-            self.client_secret = None
+            # Streamlit Cloud 환경
+            if hasattr(st, 'secrets') and len(st.secrets) > 0:
+                self.client_id = st.secrets.get("NAVER_CLIENT_ID", "")
+                self.client_secret = st.secrets.get("NAVER_CLIENT_SECRET", "")
+            else:
+                # 로컬 환경 (환경변수)
+                self.client_id = os.getenv("NAVER_CLIENT_ID", "")
+                self.client_secret = os.getenv("NAVER_CLIENT_SECRET", "")
+        except Exception:
+            # 예외 발생시 빈 문자열
+            self.client_id = ""
+            self.client_secret = ""
             
         self.base_url = "https://openapi.naver.com/v1/search/news.json"
         
@@ -22,7 +31,8 @@ class NewsAPI:
         네이버 뉴스 API를 사용하여 키워드 관련 뉴스를 검색합니다.
         """
         if not self.client_id or not self.client_secret:
-            raise ValueError("네이버 API 크리덴셜이 설정되지 않았습니다. Streamlit secrets를 확인해주세요.")
+            print("⚠️ 네이버 API 크리덴셜이 설정되지 않았습니다.")
+            return []
         
         headers = {
             'X-Naver-Client-Id': self.client_id,

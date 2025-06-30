@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 import requests
 import streamlit as st
+import os
 import json
 from enhanced_news_fetcher import EnhancedNewsAPI
 
@@ -17,15 +18,27 @@ class WorkflowState(TypedDict):
 
 class NewsWorkflowNodes:
     def __init__(self):
+        # 안전한 API 키 가져오기
         try:
-            api_key = st.secrets["OPENAI_API_KEY"]
-            self.llm = ChatOpenAI(
-                model="gpt-3.5-turbo",
-                temperature=0.3,
-                api_key=api_key
-            )
-        except KeyError:
-            raise ValueError("OpenAI API 키가 설정되지 않았습니다. Streamlit secrets를 확인해주세요.")
+            # Streamlit Cloud 환경
+            if hasattr(st, 'secrets') and len(st.secrets) > 0:
+                api_key = st.secrets.get("OPENAI_API_KEY", "")
+            else:
+                # 로컬 환경 (환경변수)
+                api_key = os.getenv("OPENAI_API_KEY", "")
+                
+            if api_key:
+                self.llm = ChatOpenAI(
+                    model="gpt-3.5-turbo",
+                    temperature=0.3,
+                    api_key=api_key
+                )
+            else:
+                raise ValueError("OpenAI API 키가 설정되지 않았습니다.")
+                
+        except Exception as e:
+            print(f"LLM 초기화 실패: {e}")
+            self.llm = None
             
         self.enhanced_news_api = EnhancedNewsAPI()
         self.all_publishers = ['조선일보', '동아일보', '중앙일보', '한겨레', '경향신문', 'SBS', 'MBC', 'KBS']
@@ -35,6 +48,13 @@ class NewsWorkflowNodes:
         1단계: 키워드를 분석하여 관련 언론사를 결정
         """
         keyword = state["keyword"]
+        
+        if not self.llm:
+            # LLM이 없으면 기본 언론사 선택
+            selected_publishers = ['조선일보', '동아일보', '한겨레', '경향신문']
+            print(f"기본 언론사 선택: {selected_publishers}")
+            state["selected_publishers"] = selected_publishers
+            return state
         
         # LLM을 사용하여 키워드에 적합한 언론사 선택
         prompt = f"""

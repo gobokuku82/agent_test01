@@ -3,6 +3,7 @@ import pandas as pd
 from streaming_workflow import StreamingWorkflow
 import json
 import time
+import os
 
 # 페이지 설정
 st.set_page_config(
@@ -10,6 +11,28 @@ st.set_page_config(
     page_icon="⚡",
     layout="wide"
 )
+
+def get_api_keys():
+    """
+    환경에 따라 API 키를 안전하게 가져오는 함수
+    """
+    try:
+        # Streamlit Cloud에서는 secrets에서 직접 가져오기
+        if hasattr(st, 'secrets') and len(st.secrets) > 0:
+            naver_client_id = st.secrets.get("NAVER_CLIENT_ID", "")
+            naver_client_secret = st.secrets.get("NAVER_CLIENT_SECRET", "")
+            openai_api_key = st.secrets.get("OPENAI_API_KEY", "")
+        else:
+            # 로컬에서는 환경변수 또는 기본값 사용
+            naver_client_id = os.getenv("NAVER_CLIENT_ID", "")
+            naver_client_secret = os.getenv("NAVER_CLIENT_SECRET", "")
+            openai_api_key = os.getenv("OPENAI_API_KEY", "")
+            
+        return naver_client_id, naver_client_secret, openai_api_key
+        
+    except Exception as e:
+        # 모든 예외 상황에서 빈 문자열 반환
+        return "", "", ""
 
 def main():
     st.title("⚡ 실시간 언론사 미디어 프레이밍 분석기")
@@ -50,45 +73,60 @@ def main():
         analyze_button = st.button("⚡ 실시간 분석 시작", type="primary", use_container_width=True)
     
     # API 키 확인
-    try:
-        naver_client_id = st.secrets["NAVER_CLIENT_ID"]
-        naver_client_secret = st.secrets["NAVER_CLIENT_SECRET"]
-        openai_api_key = st.secrets["OPENAI_API_KEY"]
-        
-        if not naver_client_id or not naver_client_secret or not openai_api_key:
-            raise KeyError("API 키가 비어있습니다")
-            
-    except KeyError:
+    naver_client_id, naver_client_secret, openai_api_key = get_api_keys()
+    
+    if not naver_client_id or not naver_client_secret or not openai_api_key:
         st.error("⚠️ API 키가 설정되지 않았습니다.")
         
-        with st.expander("🔧 Streamlit Cloud에서 Secrets 설정하기", expanded=True):
-            st.markdown("""
-            **Streamlit Cloud에서 API 키 설정 방법:**
-            
-            1. **Streamlit Cloud 앱 관리 페이지로 이동**
-               - https://share.streamlit.io 접속
-               - 본 앱 선택
-            
-            2. **Settings → Secrets 메뉴 클릭**
-            
-            3. **다음 형식으로 secrets 입력:**
-            ```toml
-            NAVER_CLIENT_ID = "your_naver_client_id"
-            NAVER_CLIENT_SECRET = "your_naver_client_secret"  
-            OPENAI_API_KEY = "your_openai_api_key"
-            ```
-            
-            4. **Save 버튼 클릭** 후 앱 자동 재시작
-            
-            ---
-            
-            **📚 API 키 발급 방법:**
-            - **네이버 검색 API**: [developers.naver.com](https://developers.naver.com/apps/#/register)
-            - **OpenAI API**: [platform.openai.com](https://platform.openai.com/api-keys)
-            """)
+        # 환경 감지
+        is_cloud = hasattr(st, 'secrets') or 'streamlit.io' in os.environ.get('STREAMLIT_SERVER_URL', '')
         
-        st.info("💡 **로컬 개발시**: 프로젝트 루트에 `.streamlit/secrets.toml` 파일을 생성하여 동일한 형식으로 설정하세요.")
+        if is_cloud:
+            # Streamlit Cloud 환경
+            with st.expander("🔧 Streamlit Cloud Secrets 설정", expanded=True):
+                st.markdown("""
+                **Streamlit Cloud에서 Secrets 설정 방법:**
+                
+                1. **앱 관리 페이지**에서 본 앱 선택
+                2. **⚙️ Settings** 클릭  
+                3. **🔐 Secrets** 탭 선택
+                4. **텍스트박스에 다음 입력:**
+                
+                ```
+                NAVER_CLIENT_ID = "your_naver_client_id"
+                NAVER_CLIENT_SECRET = "your_naver_client_secret"
+                OPENAI_API_KEY = "your_openai_api_key"
+                ```
+                
+                5. **💾 Save** 클릭 → 앱 자동 재시작
+                """)
+        else:
+            # 로컬 환경
+            with st.expander("🛠️ 로컬 개발 환경 설정", expanded=True):
+                st.markdown("""
+                **로컬에서 API 키 설정 방법:**
+                
+                **방법 1: 환경변수 설정**
+                ```bash
+                export NAVER_CLIENT_ID="your_client_id"
+                export NAVER_CLIENT_SECRET="your_client_secret"  
+                export OPENAI_API_KEY="your_openai_key"
+                ```
+                
+                **방법 2: .streamlit/secrets.toml 파일**
+                ```toml
+                [default]
+                NAVER_CLIENT_ID = "your_client_id"
+                NAVER_CLIENT_SECRET = "your_client_secret"
+                OPENAI_API_KEY = "your_openai_key"
+                ```
+                """)
+        
+        st.info("🔑 **API 키 발급**: [네이버 개발자센터](https://developers.naver.com) | [OpenAI Platform](https://platform.openai.com/api-keys)")
         return
+    
+    # API 키가 정상적으로 설정된 경우
+    st.success("✅ API 키가 정상적으로 설정되었습니다.")
     
     # 분석 실행
     if analyze_button and keyword.strip():

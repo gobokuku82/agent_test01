@@ -1,19 +1,39 @@
 import openai
 import streamlit as st
+import os
 from typing import Dict, List, Any, Tuple
 
 class NewsAnalyzer:
     def __init__(self):
+        # 안전한 API 키 가져오기
         try:
-            api_key = st.secrets["OPENAI_API_KEY"]
-            self.client = openai.OpenAI(api_key=api_key)
-        except KeyError:
-            raise ValueError("OpenAI API 키가 설정되지 않았습니다. Streamlit secrets를 확인해주세요.")
+            # Streamlit Cloud 환경
+            if hasattr(st, 'secrets') and len(st.secrets) > 0:
+                api_key = st.secrets.get("OPENAI_API_KEY", "")
+            else:
+                # 로컬 환경 (환경변수)
+                api_key = os.getenv("OPENAI_API_KEY", "")
+                
+            if api_key:
+                self.client = openai.OpenAI(api_key=api_key)
+            else:
+                raise ValueError("OpenAI API 키가 설정되지 않았습니다.")
+                
+        except Exception as e:
+            print(f"OpenAI 클라이언트 초기화 실패: {e}")
+            self.client = None
     
     def analyze_article(self, title: str, description: str) -> Dict[str, Any]:
         """
         기사 제목과 요약을 분석하여 요약, 감정, 프레이밍을 반환합니다.
         """
+        if not self.client:
+            return {
+                'summary': '분석을 수행할 수 없습니다.',
+                'sentiment': '중립적',
+                'framing': '분석 불가'
+            }
+            
         try:
             # 프롬프트 구성
             prompt = f"""
